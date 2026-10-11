@@ -1,0 +1,46 @@
+---
+title: "Results"
+description: "Read the stored customer report with detail=full or detail=compact."
+---
+
+When status is `completed` or `partial` and a customer report exists, read it from `GET /v1/research/{run_id}/result`.
+
+```bash
+curl -sS "https://seneca-research.fly.dev/v1/research/$RUN_ID/result?detail=compact" \
+  -H "Authorization: Bearer $SENECA_API_KEY"
+```
+
+`detail` defaults to `full`.
+
+| `detail` | Report |
+| --- | --- |
+| omitted, or `full` | The stored customer report, including the original question |
+| `compact` | The same stored report with the `question` object removed and `methodology` placed last |
+
+Compact is for another model that will read the result. The caller already has the prompt, and a long question spends context. Answer, evidence, analysis, the research record, and methodology stay as stored. Compact does not start research, call a model, or charge credits. Any other `detail` value is `400` `invalid_request`.
+
+A run that is still `queued`, `running`, or `synthesizing` returns `409` `result_not_ready`. A finished run with no customer report returns `409` `research_failed`. A partial run that already has a customer report returns that report. Another workspace's run is `404` `run_not_found`.
+
+The report does not include original model text. Use [model responses](/research/model-responses) for one stored answer, or the [full-panel export](/research/export) to download every response.
+
+## Where to read the finding
+
+Read the finding from the JSON. Do not scrape HTML.
+
+- `report.answer.headline`
+- `report.answer.direct_answer`
+- `report.answer.rationale`
+- `report.answer.key_points`
+- `report.answer.recommendation`
+- `report.answer.ranked_options`
+- `report.evidence.claims`
+- `report.evidence.camps` (the positions)
+- `report.analysis.disagreements`
+- `report.analysis.minority_insights`
+- `report.analysis.uncertainties`
+- `report.research_record.provenance` (model, lab, and inclusion)
+- `report.methodology`
+
+`research_record` and `methodology` are the stored objects. Methodology is the last field in a compact report.
+
+A minority finding lists its models at `report.analysis.minority_insights[].supporting_model_ids`. Use one of those ids to read that model's stored text.

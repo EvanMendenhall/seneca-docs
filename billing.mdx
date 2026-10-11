@@ -1,0 +1,37 @@
+---
+title: "Billing"
+description: "Credits are reserved when a run is accepted and charged when a customer report is delivered."
+---
+
+Credits are research capacity. They are not a cash refund.
+
+Credits are reserved when the run is accepted. `credits_reserved` is the panel price and stays at that number after the run finishes.
+
+`credits_charged` is null while the run is in progress.
+
+| Outcome | `credits_charged` | Balance |
+| --- | --- | --- |
+| A customer report is delivered, including a partial panel that still produced a report | Equal to `credits_reserved` | The reserve is kept |
+| A verified technical failure finishes with no customer report | `0` | The reserve is restored. `available_credits` on `GET /v1/account` increases by that amount |
+
+`failure_code` is `research_failed` for every failed run, whether or not the reserve was restored. Do not treat `failure_code` alone as a refund. Read `credits_charged`.
+
+A validation failure, a bad idempotency key, and a rejected panel do not reserve credits.
+
+## Account and usage
+
+`GET /v1/account` returns `plan`, `subscription_status`, `available_credits`, `entitled`, and `monthly_credit_grant`. Reads work without an active subscription. Paid research requires `entitled: true` and enough `available_credits`.
+
+`insufficient_credits` is `402` and includes `details.required` and `details.available`. `subscription_required` is `402` when the workspace cannot launch paid research.
+
+`GET /v1/usage` lists recent workspace runs, newest first. Each item includes `credits_reserved` only. Read the run for `credits_charged`. Pass `next_cursor` back as `cursor`. `limit` is 1–100.
+
+## Limits
+
+| Limit | Value |
+| --- | --- |
+| Reads | 120 requests per minute per key |
+| Creates | 30 requests per minute per workspace |
+| In-progress runs | 3 per workspace |
+
+A workspace that is already at the in-progress limit receives `409` `concurrency_limit_reached`. Too many requests receive `429` `rate_limit_exceeded`.

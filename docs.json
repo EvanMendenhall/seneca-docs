@@ -1,72 +1,90 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mintlify Starter Kit",
+  "name": "Seneca",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#0f766e",
+    "light": "#14b8a6",
+    "dark": "#0d9488"
   },
-  "favicon": "/favicon.svg",
-  "navigation": {
-    "pages": [
-      {
-        "group": "Getting Started",
-        "pages": [
-          "index",
-          "quickstart"
-        ]
-      }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
+  "favicon": "/favicon.png",
+  "api": {
+    "playground": {
+      "display": "simple"
+    },
+    "examples": {
+      "languages": ["curl", "python", "javascript"],
+      "defaults": "required",
+      "autogenerate": true
     }
   },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Getting started",
+            "pages": ["index", "quickstart", "authentication"]
+          },
+          {
+            "group": "Research",
+            "pages": [
+              "research/depths",
+              "research/create",
+              "research/polling",
+              "research/results",
+              "research/model-responses",
+              "research/export"
+            ]
+          },
+          {
+            "group": "Operations",
+            "pages": ["billing", "errors", "agents"]
+          }
+        ]
+      },
+      {
+        "tab": "API reference",
+        "openapi": "https://seneca-research.fly.dev/v1/openapi.json",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["api-reference/overview"]
+          },
+          {
+            "group": "Research",
+            "pages": [
+              "POST /v1/research",
+              "GET /v1/research/{run_id}",
+              "GET /v1/research/{run_id}/result",
+              "GET /v1/research/{run_id}/responses",
+              "GET /v1/research/{run_id}/responses/text",
+              "GET /v1/research/{run_id}/responses/export"
+            ]
+          },
+          {
+            "group": "Account",
+            "pages": ["GET /v1/account", "GET /v1/usage"]
+          }
+        ]
+      }
+    ]
   },
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:support@mintlify.com"
+        "label": "Seneca",
+        "href": "https://seneca.professionalaiagents.com"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://app.mintlify.com"
+      "label": "API keys",
+      "href": "https://seneca.professionalaiagents.com/developers#api-keys"
     }
   },
   "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude",
-      "perplexity",
-      "mcp",
-      "cursor",
-      "vscode"
-    ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    "options": ["copy", "view", "download-spec"]
   }
 }

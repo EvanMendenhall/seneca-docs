@@ -1,0 +1,44 @@
+---
+title: "Model responses"
+description: "List stored model metadata, then read one model's text in a character window."
+---
+
+Use this after a `completed` or `partial` run when you need the text behind a finding. These reads do not start research, call a provider, or write a credit ledger row.
+
+## List metadata
+
+`GET /v1/research/{run_id}/responses` is metadata. It does not include the text.
+
+```bash
+curl -sS "https://seneca-research.fly.dev/v1/research/$RUN_ID/responses?limit=20" \
+  -H "Authorization: Bearer $SENECA_API_KEY"
+```
+
+Each item has `model_id`, `display_name`, `laboratory`, `status` (`success`, `error`, or `timeout`), `input_tokens`, `output_tokens`, `text_available`, and `text_characters`. `limit` is 1–50. Pass `next_cursor` back as `cursor`.
+
+## Read one model
+
+`GET /v1/research/{run_id}/responses/text` returns one stored model, and only a window of its text. Put the stored id in the query string, including ids that contain `/`.
+
+```bash
+curl -sS --get "https://seneca-research.fly.dev/v1/research/$RUN_ID/responses/text" \
+  -H "Authorization: Bearer $SENECA_API_KEY" \
+  --data-urlencode "model_id=anthropic/claude-3-haiku" \
+  --data-urlencode "offset=0" \
+  --data-urlencode "max_characters=8000"
+```
+
+`model_id` is the id stored on the run. Take it from the list or from `report.analysis.minority_insights[].supporting_model_ids`. A retired model keeps the id stored on the run. The replacement id does not.
+
+`text` starts at `offset` and contains at most `max_characters` characters. The default window is 8000. The maximum is 32000. `offset` is 0–1000000. `text_characters` is the full stored length. When `truncated` is true, add `returned_characters` to `offset` and request the next window. A model that stored no text returns `text: null`.
+
+## When the text is not available
+
+| HTTP | Code | When |
+| --- | --- | --- |
+| 409 | `responses_not_ready` | The run is still `queued`, `running`, or `synthesizing` |
+| 409 | `research_failed` | The run finished without a completed or partial panel |
+| 404 | `model_response_not_found` | That model id is not stored on this run |
+| 404 | `run_not_found` | The run belongs to another workspace, or it does not exist |
+
+To save every response in one file, use the [full-panel export](/research/export). Do not walk the single-model window when you need the whole panel, and do not load the whole panel into an agent's context.

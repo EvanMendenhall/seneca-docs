@@ -1,0 +1,41 @@
+---
+title: "Create a run"
+description: "POST /v1/research accepts a question, requires an idempotency key, and returns before the panel finishes."
+---
+
+`POST /v1/research` requires `Content-Type: application/json` and `Idempotency-Key`.
+
+The body has two fields:
+
+| Field | Meaning |
+| --- | --- |
+| `prompt` | The research question. Surrounding whitespace is trimmed. |
+| `panel` | `wide`, `consensus`, or `seneca` |
+
+The idempotency key is 1–255 characters: letters, numbers, or `.` `_` `:` `-`. Use one key per logical question. Save it with the run id.
+
+```bash
+curl -sS -D - -X POST https://seneca-research.fly.dev/v1/research \
+  -H "Authorization: Bearer $SENECA_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: notes-drafts-001" \
+  -d '{"prompt":"Should a notes app store drafts locally before syncing them to the cloud?","panel":"wide"}'
+```
+
+## Response
+
+A new run returns `202` and a body with `id`, `status`, `panel`, `credits_reserved`, `credits_charged`, and `progress`. Store `id`. The create connection does not stay open until the research finishes.
+
+`credits_charged` is null while the run is in progress. `credits_reserved` is the panel price and does not change when the run finishes.
+
+## Replay
+
+The same `Idempotency-Key` with the same prompt and panel returns the original run for 24 hours. That response is `200`, the header `Idempotent-Replayed` is `true`, and the server does not create or charge a second run.
+
+A different prompt or panel with that key returns `409` `idempotency_conflict`.
+
+After 24 hours the same key starts a new paid run. A new key always can. Do not mint a new idempotency key only because the first response did not arrive.
+
+<Warning>
+  Do not retry `POST /v1/research` with a different `Idempotency-Key` merely because the client did not receive the first response.
+</Warning>

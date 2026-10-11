@@ -1,0 +1,36 @@
+---
+title: "Errors"
+description: "Public errors use error.code. Read that field before you retry."
+---
+
+`/v1` errors look like:
+
+```json
+{
+  "error": {
+    "code": "invalid_request",
+    "message": "Request could not be accepted.",
+    "details": {}
+  }
+}
+```
+
+Handle the API from `error.code`. The message is for a person. `details` carries extra fields when the code defines them, such as `required` and `available` on `insufficient_credits`.
+
+| HTTP | Code |
+| --- | --- |
+| 401 | `authentication_required`, `invalid_api_key` |
+| 400 | `invalid_request`, `idempotency_key_required`, `invalid_idempotency_key`, `invalid_cursor`, `quick_pulse_unavailable` |
+| 402 | `insufficient_credits`, `subscription_required` |
+| 404 | `run_not_found`, `model_response_not_found` |
+| 409 | `idempotency_conflict`, `concurrency_limit_reached`, `result_not_ready`, `responses_not_ready`, `research_failed` |
+| 429 | `rate_limit_exceeded` |
+| 500 | `internal_error` |
+
+`quick_pulse_unavailable` rejects a retired panel id. It does not reserve credits. The public panel ids are `wide`, `consensus`, and `seneca`.
+
+Another workspace's run is `404` `run_not_found`, not the report. A `500` `internal_error` body does not include a traceback or a secret.
+
+<Note>
+  A lost create response is not an error to paper over with a new idempotency key. Repeat the same `POST` with the same key, prompt, and panel. See [Create a run](/research/create).
+</Note>

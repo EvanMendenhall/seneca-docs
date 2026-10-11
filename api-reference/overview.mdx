@@ -1,0 +1,26 @@
+---
+title: "API reference"
+description: "The public Seneca API, generated from the OpenAPI specification."
+sidebarTitle: "Overview"
+---
+
+Base URL: `https://seneca-research.fly.dev/v1`
+
+Every request is sent to `https://seneca-research.fly.dev` plus the path in the specification. A create call is `https://seneca-research.fly.dev/v1/research`.
+
+Send `Authorization: Bearer seneca_sk_...` on every call except the OpenAPI document. These pages show request schemas and copyable examples. They do not send requests.
+
+The endpoint pages are generated from [https://seneca-research.fly.dev/v1/openapi.json](https://seneca-research.fly.dev/v1/openapi.json). Schemas, parameters, and responses come from that specification.
+
+- [Create research](/api-reference/public-api/create-research) — `POST /v1/research`
+- [Read research status](/api-reference/public-api/read-research-status) — `GET /v1/research/{run_id}`
+- [Read the research report](/api-reference/public-api/read-the-research-report) — `GET /v1/research/{run_id}/result`
+- [List stored model responses](/api-reference/public-api/list-stored-model-responses) — `GET /v1/research/{run_id}/responses`
+- [Read one stored model response](/api-reference/public-api/read-one-stored-model-response) — `GET /v1/research/{run_id}/responses/text`
+- [Export stored model responses](/api-reference/public-api/export-stored-model-responses) — `GET /v1/research/{run_id}/responses/export`
+- [Read account](/api-reference/public-api/read-account) — `GET /v1/account`
+- [List research usage](/api-reference/public-api/list-research-usage) — `GET /v1/usage`
+
+<Note>
+  Guides explain polling, billing, and how to call Seneca from an agent. This reference is the contract for each endpoint.
+</Note>

@@ -1,0 +1,30 @@
+---
+title: "Full-panel export"
+description: "Download every stored model response as UTF-8 JSONL."
+---
+
+`GET /v1/research/{run_id}/responses/export` returns every stored model response in one request. The body is UTF-8 JSONL: one JSON object per line, not a JSON array.
+
+```bash
+curl -fS -H "Authorization: Bearer $SENECA_API_KEY" \
+  "https://seneca-research.fly.dev/v1/research/$RUN_ID/responses/export" \
+  -o seneca-responses.jsonl
+```
+
+Each line has `model_id`, `display_name`, `laboratory`, `status`, `input_tokens`, `output_tokens`, and `text`. `text` is the complete stored response, or null when that model stored none. The single-model 32000-character window does not apply. Error and timeout rows are included. A retired model keeps the id saved on the run.
+
+The response sets `Content-Disposition: attachment; filename="seneca-{run_id}-responses.jsonl"`.
+
+Authorization and readiness match the single-model read, and they are decided before the stream starts.
+
+| HTTP | Code | When |
+| --- | --- | --- |
+| 409 | `responses_not_ready` | The run is still `queued`, `running`, or `synthesizing` |
+| 409 | `research_failed` | The run failed |
+| 404 | `run_not_found` | The run belongs to another workspace, or it does not exist |
+
+The download does not start research, call a provider, or reserve credits.
+
+<Warning>
+  Save the file for your own storage and analysis. Do not load every model response into an AI agent's context. To inspect one finding, use the [single-model read](/research/model-responses).
+</Warning>

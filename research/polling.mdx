@@ -1,0 +1,37 @@
+---
+title: "Polling"
+description: "Poll GET /v1/research/{run_id} until the run is completed, partial, or failed."
+---
+
+Research often takes several minutes. Poll with a new request. Do not keep the original POST open.
+
+```bash
+curl -sS https://seneca-research.fly.dev/v1/research/$RUN_ID \
+  -H "Authorization: Bearer $SENECA_API_KEY"
+```
+
+## Status
+
+| Status | Meaning |
+| --- | --- |
+| `queued` | Accepted and waiting to start |
+| `running` | Models are answering |
+| `synthesizing` | The panel has finished and the report is being assembled |
+| `completed` | Finished with a customer report |
+| `partial` | A partial panel still produced a customer report |
+| `failed` | Finished without a customer report |
+
+`phase` is `panel` while models are still answering. It is null while synthesizing and after the run finishes.
+
+`progress` counts models invited, completed, successful, and failed:
+
+| Field | Meaning |
+| --- | --- |
+| `total_models` | Models invited |
+| `completed_models` | Models that have finished, including failures |
+| `successful_models` | Models that returned a usable response |
+| `failed_models` | Models that failed or timed out |
+
+Another workspace's run is `404` `run_not_found`.
+
+When status is `completed` or `partial` and a customer report exists, read [the result](/research/results). A `failed` run has no report. See [billing](/billing) for how `credits_charged` is set.

@@ -1,0 +1,136 @@
+---
+title: "Agents"
+description: "Call the Seneca REST API from a backend or agent runtime."
+---
+
+Read the API key from `SENECA_API_KEY`. Never hard-code or commit it. Call Seneca from a backend or agent runtime. Prefer `detail=compact` unless the original question object or full provenance is explicitly required.
+
+Plain-text quickstart, no JavaScript: [https://seneca.professionalaiagents.com/api.md](https://seneca.professionalaiagents.com/api.md)
+
+OpenAPI: [https://seneca-research.fly.dev/v1/openapi.json](https://seneca-research.fly.dev/v1/openapi.json)
+
+## Instructions for an agent
+
+```text
+Base URL:
+https://seneca-research.fly.dev/v1
+
+Authentication:
+Authorization: Bearer $SENECA_API_KEY
+
+To check the workspace:
+GET /v1/account
+
+To launch research:
+POST /v1/research
+Content-Type: application/json
+Idempotency-Key: a unique key for this logical request (1–255 letters, numbers, or . _ : -)
+
+Body:
+{"prompt":"<question>","panel":"wide"}
+
+Supported panel values: wide, consensus, seneca.
+
+Research is asynchronous.
+A new run returns 202. Store id.
+The same Idempotency-Key with the same prompt and panel returns 200 and the original run for 24 hours, with header Idempotent-Replayed: true.
+Reusing that key with a different prompt or panel returns 409 idempotency_conflict.
+
+After creation:
+1. Poll GET /v1/research/{run_id} until status is completed, partial, or failed.
+2. When a customer report exists, GET /v1/research/{run_id}/result?detail=compact
+3. The result does not include original model text. List GET /v1/research/{run_id}/responses, then read one stored model with GET /v1/research/{run_id}/responses/text?model_id=
+4. To save the whole panel, GET /v1/research/{run_id}/responses/export returns UTF-8 JSONL. Do not load every model response into an agent's context.
+
+If the report is not ready, the result endpoint returns 409 result_not_ready.
+If the run finished without a customer report, it returns 409 research_failed.
+credits_charged equals credits_reserved when a report is delivered.
+credits_charged is 0 when a verified technical failure restores the reserve.
+Do not retry POST /v1/research with a different Idempotency-Key merely because the first response was lost.
+```
+
+## Python
+
+```python
+import json
+import os
+import time
+import urllib.error
+import urllib.request
+
+BASE = "https://seneca-research.fly.dev/v1"
+KEY = os.environ["SENECA_API_KEY"]
+IDEMPOTENCY_KEY = "notes-drafts-001"
+PROMPT = "Should a notes app store drafts locally before syncing them to the cloud?"
+PANEL = "wide"
+
+
+def call(method, path, body=None, headers=None):
+    request = urllib.request.Request(
+        BASE + path,
+        data=None if body is None else json.dumps(body).encode(),
+        method=method,
+        headers={
+            "Authorization": f"Bearer {KEY}",
+            "Accept": "application/json",
+            **(headers or {}),
+        },
+    )
+    try:
+        with urllib.request.urlopen(request) as response:
+            return response.status, dict(response.headers), json.loads(response.read().decode())
+    except urllib.error.HTTPError as exc:
+        payload = json.loads(exc.read().decode())
+        return exc.code, dict(exc.headers), payload
+
+
+def main():
+    status, _, account = call("GET", "/account")
+    if status != 200:
+        raise SystemExit(account["error"]["code"])
+
+    status, headers, run = call(
+        "POST",
+        "/research",
+        {"prompt": PROMPT, "panel": PANEL},
+        {"Content-Type": "application/json", "Idempotency-Key": IDEMPOTENCY_KEY},
+    )
+    if status not in (200, 202):
+        raise SystemExit(run["error"]["code"])
+    run_id = run["id"]
+
+    while run["status"] not in {"completed", "partial", "failed"}:
+        time.sleep(5)
+        status, _, run = call("GET", f"/research/{run_id}")
+        if status != 200:
+            raise SystemExit(run["error"]["code"])
+
+    if run["status"] == "failed":
+        if run["credits_charged"] == 0 and run["credits_reserved"] > 0:
+            print("technical-failure refund restored the reserve")
+        else:
+            print("failed", run["failure_code"], "charged", run["credits_charged"])
+        return
+
+    status, _, result = call("GET", f"/research/{run_id}/result?detail=compact")
+    if status != 200:
+        raise SystemExit(result["error"]["code"])
+    answer = result["report"].get("answer") or {}
+    print(answer.get("headline"))
+    print(answer.get("direct_answer"))
+
+
+if __name__ == "__main__":
+    main()
+```
+
+If that program loses the `202` response, run it again with the same `IDEMPOTENCY_KEY`, prompt, and panel. The second call returns the same `run_id`.
+
+## TypeScript
+
+```typescript
+const response = await fetch("https://seneca-research.fly.dev/v1/account", {
+  headers: { Authorization: `Bearer ${process.env.SENECA_API_KEY}` },
+})
+console.log(await response.json())
+```

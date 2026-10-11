@@ -1,0 +1,35 @@
+---
+title: "Authentication"
+description: "Create a Seneca API key and send it as a bearer token."
+---
+
+Create a key while signed in on the [Developers page](https://seneca.professionalaiagents.com/developers#api-keys). The secret starts with `seneca_sk_` and is shown once.
+
+Send it on every call except the OpenAPI document:
+
+```http
+Authorization: Bearer $SENECA_API_KEY
+```
+
+```bash
+curl https://seneca-research.fly.dev/v1/account \
+  -H "Authorization: Bearer $SENECA_API_KEY"
+```
+
+A browser session token is not a Seneca API key. A key can read account and usage without an active subscription. Creating research uses that workspace's subscription, credits, concurrency limit, and launch rules.
+
+<Warning>
+  Keep the key in an environment variable or a secret manager. Call Seneca from a backend or agent runtime. Do not put the key in public browser JavaScript, and do not commit it.
+</Warning>
+
+## What the key can do
+
+| Call | Subscription required |
+| --- | --- |
+| `GET /v1/openapi.json` | No key required |
+| `GET /v1/account`, `GET /v1/usage`, report and response reads | Key required. An active subscription is not required |
+| `POST /v1/research` | Key required, `entitled: true`, and enough credits |
+
+Missing or non-bearer credentials return `401` `authentication_required`. An unknown, revoked, or expired key returns `401` `invalid_api_key`.
+
+`GET /v1/openapi.json` is the machine-readable contract and does not require a key: [https://seneca-research.fly.dev/v1/openapi.json](https://seneca-research.fly.dev/v1/openapi.json). The API reference is generated from that document.

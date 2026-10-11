@@ -1,0 +1,41 @@
+---
+title: "Research depths"
+description: "Wide, Consensus, and Seneca. The server chooses the models and the price."
+---
+
+Send a panel id. Do not send a model list. The server owns the roster and the price. Extra JSON fields are rejected and do not reserve credits.
+
+| Panel | Credits reserved | What runs |
+| --- | ---: | --- |
+| `wide` | 15 | 10 curated models |
+| `consensus` | 45 | 40 curated models |
+| `seneca` | 100 | Every production-eligible model |
+
+Choosing `seneca` reserves 100 credits. Choosing `wide` reserves 15. The price is not taken from the client.
+
+```bash
+curl -sS -D - -X POST https://seneca-research.fly.dev/v1/research \
+  -H "Authorization: Bearer $SENECA_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: notes-drafts-001" \
+  -d '{"prompt":"Should a notes app store drafts locally before syncing them to the cloud?","panel":"wide"}'
+```
+
+## What the panel does
+
+Participating models answer the question separately. Evidence collection stays separate from synthesis. Model and lab identities are hidden from the synthesis stage, then mapped back for the finished report.
+
+The published report keeps the finding together with panel composition, inclusion status, claim-level evidence, and run conditions. Panel agreement describes the tested models under this question and run configuration.
+
+## Controls on every run
+
+- Text-to-text only
+- No web retrieval
+- No chain-of-thought traces
+- No external tools
+- No RAG
+- No reasoning-model variants
+
+<Note>
+  The public panel ids are `wide`, `consensus`, and `seneca`. Any other panel id is rejected and does not reserve credits.
+</Note>
