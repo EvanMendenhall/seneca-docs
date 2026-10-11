@@ -1,0 +1,26 @@
+overlay: 1.0.0
+info:
+  title: JSONL export example
+  version: 1.0.0
+extends: https://seneca-research.fly.dev/v1/openapi.json
+actions:
+  - target: $.paths['/v1/research/{run_id}/responses/export'].get
+    update:
+      x-codeSamples:
+        - lang: javascript
+          label: JavaScript
+          source: |
+            const response = await fetch(
+              `https://seneca-research.fly.dev/v1/research/${runId}/responses/export`,
+              {
+                headers: { Authorization: `Bearer ${process.env.SENECA_API_KEY}` },
+              },
+            )
+            if (!response.ok) {
+              throw new Error(await response.text())
+            }
+            const jsonl = await response.text()
+            const rows = jsonl
+              .split("\n")
+              .filter(Boolean)
+              .map((line) => JSON.parse(line))

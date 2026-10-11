@@ -46,7 +46,10 @@
       },
       {
         "tab": "API reference",
-        "openapi": "https://seneca-research.fly.dev/v1/openapi.json",
+        "openapi": {
+          "source": "https://seneca-research.fly.dev/v1/openapi.json",
+          "overlays": ["overlays/export-jsonl.yaml"]
+        },
         "groups": [
           {
             "group": "Overview",
