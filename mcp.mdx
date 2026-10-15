@@ -1,0 +1,141 @@
+---
+title: "MCP"
+description: "Connect an MCP client over Streamable HTTP and call the six Seneca tools with a bearer API key."
+---
+
+MCP lets an agent discover Seneca and call the same research engine, workspace, credit ledger, and report as the REST API. The server speaks Streamable HTTP at `https://mcp.seneca.professionalaiagents.com/mcp`.
+
+Signing in and creating an API key authenticates the client. It does not by itself authorize spending. `create_research` still requires an entitled workspace and enough available credits. The other five tools do not launch research and do not spend credits.
+
+Cursor, ChatGPT, and Muse have been tested against this endpoint. Any MCP client that supports Streamable HTTP and a Bearer header can use the same URL and header. The copyable client configuration on this page is the Cursor project file.
+
+## Connect
+
+<Steps>
+  <Step title="Create an API key">
+    Sign in, select an organization, and create a key on the [Developers page](https://seneca.professionalaiagents.com/developers#api-keys). The secret starts with `seneca_sk_` and is shown once.
+  </Step>
+  <Step title="Add the Seneca server">
+    In Cursor, open Settings, then MCP, and add a custom server. Or save the config below as `.cursor/mcp.json` in the project.
+  </Step>
+  <Step title="Pass the key from the environment">
+    Set `SENECA_API_KEY` in the environment Cursor reads. The config sends that value as the bearer token. Do not commit the key.
+  </Step>
+</Steps>
+
+```json
+{
+  "mcpServers": {
+    "seneca": {
+      "url": "https://mcp.seneca.professionalaiagents.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${env:SENECA_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+Other MCP clients that support Streamable HTTP and a Bearer header use that same URL and header:
+
+```text
+URL: https://mcp.seneca.professionalaiagents.com/mcp
+Header: Authorization: Bearer $SENECA_API_KEY
+```
+
+## Authentication
+
+Send the workspace API key on every MCP request, the same key the REST API accepts:
+
+```http
+Authorization: Bearer $SENECA_API_KEY
+```
+
+A missing bearer token fails as `authentication_required`. An unknown, revoked, or expired key fails as `invalid_api_key`. Keep the key in an environment variable or a secret manager. See [Authentication](/authentication).
+
+<Warning>
+  Do not paste a production key into `.cursor/mcp.json` or into chat. The Cursor config above reads `SENECA_API_KEY` from the environment.
+</Warning>
+
+## What spends credits
+
+Launching research through MCP spends the same panel credits as the REST API. The server sets the price. Approve the panel and the cost before the agent calls `create_research`. You can start the run from the agent and watch the report generate in Seneca. Open History to see a run that is still in progress.
+
+| Tool | Credits |
+| --- | --- |
+| `get_account` | Does not spend credits |
+| `create_research` | Spends the panel price: Wide 15, Consensus 45, Seneca 100 |
+| `get_research` | Does not spend credits |
+| `get_research_result` | Does not spend credits |
+| `list_model_responses` | Does not spend credits |
+| `get_model_response_text` | Does not spend credits |
+
+Panel ids are `wide`, `consensus`, and `seneca`. The roster and the price are on [Research depths](/research/depths). Reservation and settlement follow [Billing](/billing): a delivered report keeps the reserve, and a verified technical failure with no customer report restores it.
+
+## Workflow
+
+<Steps>
+  <Step title="Connect">
+    Connect over Streamable HTTP with the Bearer API key, then discover the six Seneca tools.
+  </Step>
+  <Step title="Read the account">
+    Call `get_account` for entitlement and available credits. This call does not spend credits.
+  </Step>
+  <Step title="Choose a panel">
+    Select `wide`, `consensus`, or `seneca` only when the workspace can afford that price.
+  </Step>
+  <Step title="Get authorization">
+    Get explicit authorization for that panel and credit cost before you spend.
+  </Step>
+  <Step title="Create research">
+    Call `create_research` with the prompt, the panel, and a unique idempotency key.
+  </Step>
+  <Step title="Poll, then read">
+    Poll `get_research`, then read `get_research_result`.
+  </Step>
+</Steps>
+
+## Tools
+
+| Tool | Kind | Purpose |
+| --- | --- | --- |
+| `get_account` | Read-only | Read plan, entitlement, and available credits. Does not launch research or spend credits. |
+| `create_research` | Spends credits | Launch a research run. Requires prompt, panel, and a unique idempotency key. Wide 15, Consensus 45, Seneca 100. |
+| `get_research` | Read-only | Poll run status, phase, panel progress, and credit settlement. Does not launch research. |
+| `get_research_result` | Read-only | Read the stored customer report. Prefer compact detail. Does not launch research. |
+| `list_model_responses` | Read-only | List stored model metadata for a completed or partial run. Does not return response text. |
+| `get_model_response_text` | Read-only | Read one stored model response in a bounded character window. Does not launch research. |
+
+### Get account
+
+Call this before you spend. It returns the plan, subscription status, whether the workspace is entitled to launch paid research, available credits, and the monthly credit grant. It does not launch research.
+
+### Create research
+
+This is the only tool that spends credits. Pass the research question as `prompt`, the panel id as `panel`, and a unique `idempotency_key` for that logical run.
+
+Wide reserves 15 credits, Consensus reserves 45, and Seneca reserves 100. The key rules match [Create a run](/research/create): one key per logical request, and the same key with the same prompt and panel replays the original run for 24 hours instead of charging again. A reused key with a different prompt or panel returns `idempotency_conflict`.
+
+The call returns when the run is accepted. Research continues after that. Store the run id and poll `get_research`.
+
+### Get research
+
+Pass the run id from `create_research`. The tool returns status, phase, panel progress, and credit settlement. In-progress statuses are `queued`, `running`, and `synthesizing`. Terminal statuses are `completed`, `partial`, and `failed`. This call does not launch research. See [Polling](/research/polling).
+
+### Get research result
+
+Read the stored customer report after the run is `completed` or `partial` and a report exists. Prefer compact detail. When you omit `detail`, this tool returns compact. Compact omits the question object. `full` returns the stored report unchanged. A run that is still in progress returns `result_not_ready`. A finished run with no customer report returns `research_failed`. This call does not launch research or write a credit charge. See [Results](/research/results).
+
+### List model responses
+
+List stored model metadata for a `completed` or `partial` run. The list does not include response text. Use it to choose a model id, then read that model with `get_model_response_text`. See [Model responses](/research/model-responses).
+
+### Get model response text
+
+Read one stored model response in a bounded character window. Pass the run id and the stored model id from the list or from the report. Do not load the whole panel into the agent's context. The window rules are the same as the REST single-model read. This call does not launch research or spend credits.
+
+<Note>
+  If the agent writes the research prompt, it still has to follow the method. Participating models do not use live web retrieval or external tools. Agreement across models is not independent factual verification. See [Research depths](/research/depths).
+</Note>
+
+Tool failures use the same `error.code` values as the REST API. See [Errors](/errors). To call Seneca with HTTP instead of MCP, use the [Quickstart](/quickstart).

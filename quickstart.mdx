@@ -1,9 +1,9 @@
 ---
 title: "Quickstart"
-description: "Check the account, create a research run, poll it, and read the compact report."
+description: "Check the account, create a research run over REST, poll it, and read the compact report."
 ---
 
-This path takes a workspace from an API key to a stored research report. The create request returns as soon as the run is accepted. Poll with a new request. Do not keep the original POST open.
+Seneca accepts research over the REST API and over [MCP](/mcp). This page is the REST path. It takes a workspace from an API key to a stored research report. The create request returns as soon as the run is accepted. Poll with a new request. Do not keep the original POST open. MCP uses the same key, panels, and credit ledger.
 
 ## Prerequisites
 
@@ -71,6 +71,9 @@ Reads work without an active subscription. Paid research requires `entitled: tru
 ## Next
 
 <CardGroup cols={2}>
+  <Card title="MCP" icon="plug" href="/mcp">
+    Call the same research engine from a Streamable HTTP client.
+  </Card>
   <Card title="Polling" icon="clock" href="/research/polling">
     Statuses, phase, and progress counts.
   </Card>
@@ -78,7 +81,7 @@ Reads work without an active subscription. Paid research requires `entitled: tru
     Full and compact reports.
   </Card>
   <Card title="Agents" icon="bot" href="/agents">
-    A complete Python lifecycle and a TypeScript example.
+    A REST lifecycle, plus MCP for an agent client.
   </Card>
   <Card title="Errors" icon="triangle-alert" href="/errors">
     Read `error.code` before you retry.
