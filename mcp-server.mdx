@@ -5,6 +5,10 @@ description: "Connect an MCP client over Streamable HTTP and call the six Seneca
 
 MCP lets an agent discover Seneca and call the same research engine, workspace, credit ledger, and report as the REST API. The server speaks Streamable HTTP at `https://mcp.seneca.professionalaiagents.com/mcp`.
 
+<Note>
+  Mintlify hosts a search server for these docs at `https://docs.seneca.professionalaiagents.com/mcp`. That path searches the documentation. Seneca research runs at `https://mcp.seneca.professionalaiagents.com/mcp`.
+</Note>
+
 Signing in and creating an API key authenticates the client. It does not by itself authorize spending. `create_research` still requires an entitled workspace and enough available credits. The other five tools do not launch research and do not spend credits.
 
 Cursor, ChatGPT, and Muse have been tested against this endpoint. Any MCP client that supports Streamable HTTP and a Bearer header can use the same URL and header. The copyable client configuration on this page is the Cursor project file.

@@ -3,7 +3,7 @@ title: "Agents"
 description: "Call Seneca over REST from a backend, or over MCP from an agent client."
 ---
 
-Call Seneca over the REST API from a backend or agent runtime, or over [MCP](/mcp) from a client that speaks Streamable HTTP. Both use the same API key, panels, and credit ledger. Read the key from `SENECA_API_KEY`. Never hard-code or commit it. Prefer `detail=compact` unless the original question object or full provenance is explicitly required.
+Call Seneca over the REST API from a backend or agent runtime, or over [MCP](/mcp-server) from a client that speaks Streamable HTTP. Both use the same API key, panels, and credit ledger. Read the key from `SENECA_API_KEY`. Never hard-code or commit it. Prefer `detail=compact` unless the original question object or full provenance is explicitly required.
 
 Plain-text quickstart, no JavaScript: [https://seneca.professionalaiagents.com/api.md](https://seneca.professionalaiagents.com/api.md)
 
@@ -55,7 +55,7 @@ MCP is available at https://mcp.seneca.professionalaiagents.com/mcp. Authenticat
 
 Connect the client to `https://mcp.seneca.professionalaiagents.com/mcp` and send `Authorization: Bearer` with the same `seneca_sk_` key. Discover the six tools. `create_research` spends the panel price (Wide 15, Consensus 45, Seneca 100). `get_account`, `get_research`, `get_research_result`, `list_model_responses`, and `get_model_response_text` do not spend credits.
 
-Approve the panel and the cost before the agent calls `create_research`. The Cursor config and the tool list are on the [MCP](/mcp) page. A2A is not available.
+Approve the panel and the cost before the agent calls `create_research`. The Cursor config and the tool list are on the [MCP](/mcp-server) page. A2A is not available.
 
 ## Python
 
