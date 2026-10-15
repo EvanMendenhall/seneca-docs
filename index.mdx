@@ -7,11 +7,14 @@ Seneca submits one question to a panel of independent AI models and returns a st
 
 Panel models do not browse the web, call tools, or use extended reasoning. Agreement in the report is a finding about that panel. It is not a human poll, and it is not proof that a claim is factually correct.
 
-The public API is `https://seneca-research.fly.dev/v1`. Research is asynchronous. Create a run, poll until it finishes, then read the stored report. Original model text is a separate read.
+Call Seneca over REST at `https://seneca-research.fly.dev/v1`, or over MCP at `https://mcp.seneca.professionalaiagents.com/mcp`. Both use the same API key, panels, credit ledger, and stored report. Research is asynchronous. Create a run, poll until it finishes, then read the stored report. Original model text is a separate read.
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="rocket" href="/quickstart">
-    Create a key, launch a run, and read the report.
+    Create a key, launch a run over REST, and read the report.
+  </Card>
+  <Card title="MCP" icon="plug" href="/mcp-server">
+    Connect a Streamable HTTP client and call the six Seneca tools.
   </Card>
   <Card title="Authentication" icon="key" href="/authentication">
     Send a Seneca API key as a bearer token.
@@ -38,4 +41,4 @@ The public API is `https://seneca-research.fly.dev/v1`. Research is asynchronous
   </Step>
 </Steps>
 
-There are no webhooks in this version. Custom model selection is not part of this API. The supported integration is this REST API.
+There are no webhooks in this version. Custom model selection is not part of this API. The operational integrations are the REST API and [MCP](/mcp-server).
